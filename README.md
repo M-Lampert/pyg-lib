@@ -7,12 +7,14 @@
 [coverage-image]: https://codecov.io/gh/pyg-team/pyg-lib/branch/master/graph/badge.svg
 [coverage-url]: https://codecov.io/github/pyg-team/pyg-lib?branch=master
 
-# pyg-lib
+# Fork of pyg-lib
 
 [![Python Testing Status][python-testing-image]][python-testing-url]
 [![CPP Testing Status][cpp-testing-image]][cpp-testing-url]
 [![Docs Status][docs-image]][docs-url]
 [![Code Coverage][coverage-image]][coverage-url]
+
+This is a fork of pyg-lib that enables non-disjoint temporal sampling.
 
 * [Installation](#installation)
 

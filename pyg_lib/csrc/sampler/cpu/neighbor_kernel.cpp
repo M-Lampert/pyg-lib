@@ -345,10 +345,6 @@ sample(const at::Tensor& rowptr,
        const c10::optional<at::Tensor>& edge_weight,
        const bool csc,
        const std::string temporal_strategy) {
-  TORCH_CHECK(!node_time.has_value() || disjoint,
-              "Temporal sampling needs to create disjoint subgraphs");
-  TORCH_CHECK(!edge_time.has_value() || disjoint,
-              "Temporal sampling needs to create disjoint subgraphs");
   TORCH_CHECK(!(node_time.has_value() && edge_time.has_value()),
               "Only one of node-level or edge-level sampling is supported ");
 
@@ -408,16 +404,16 @@ sample(const at::Tensor& rowptr,
         sampled_nodes.push_back({i, seed_data[i]});
         mapper.insert({i, seed_data[i]});
       }
-      if (seed_time.has_value()) {
-        const auto seed_time_data = seed_time.value().data_ptr<temporal_t>();
-        for (size_t i = 0; i < seed.numel(); ++i) {
-          seed_times.push_back(seed_time_data[i]);
-        }
-      } else if (node_time.has_value()) {
-        const auto time_data = node_time.value().data_ptr<temporal_t>();
-        for (size_t i = 0; i < seed.numel(); ++i) {
-          seed_times.push_back(time_data[seed_data[i]]);
-        }
+    }
+    if (seed_time.has_value()) {
+      const auto seed_time_data = seed_time.value().data_ptr<temporal_t>();
+      for (size_t i = 0; i < seed.numel(); ++i) {
+        seed_times.push_back(seed_time_data[i]);
+      }
+    } else if (node_time.has_value()) {
+      const auto time_data = node_time.value().data_ptr<temporal_t>();
+      for (size_t i = 0; i < seed.numel(); ++i) {
+        seed_times.push_back(time_data[seed_data[i]]);
       }
     }
 
@@ -452,16 +448,15 @@ sample(const at::Tensor& rowptr,
           if constexpr (distributed)
             cumsum_neighbors_per_node.push_back(sampled_nodes.size());
         }
-      } else if constexpr (!std::is_scalar<node_t>::value) {  // Temporal:
+      } else {  // Temporal:
         if (edge_time.has_value()) {
           const auto edge_time_data = edge_time.value().data_ptr<temporal_t>();
           for (size_t i = begin; i < end; ++i) {
-            const auto batch_idx = sampled_nodes[i].first;
             sampler.edge_temporal_sample(
                 /*global_src_node=*/sampled_nodes[i],
                 /*local_src_node=*/i,
                 /*count=*/count,
-                /*seed_time=*/seed_times[batch_idx],
+                /*seed_time=*/seed_times[i],
                 /*time=*/edge_time_data,
                 /*dst_mapper=*/mapper,
                 /*generator=*/generator,
@@ -472,12 +467,11 @@ sample(const at::Tensor& rowptr,
         } else {
           const auto node_time_data = node_time.value().data_ptr<temporal_t>();
           for (size_t i = begin; i < end; ++i) {
-            const auto batch_idx = sampled_nodes[i].first;
             sampler.node_temporal_sample(
                 /*global_src_node=*/sampled_nodes[i],
                 /*local_src_node=*/i,
                 /*count=*/count,
-                /*seed_time=*/seed_times[batch_idx],
+                /*seed_time=*/seed_times[i],
                 /*time=*/node_time_data,
                 /*dst_mapper=*/mapper,
                 /*generator=*/generator,
@@ -532,10 +526,6 @@ sample(const std::vector<node_type>& node_types,
        const c10::optional<c10::Dict<rel_type, at::Tensor>>& edge_weight_dict,
        const bool csc,
        const std::string temporal_strategy) {
-  TORCH_CHECK(!node_time_dict.has_value() || disjoint,
-              "Node temporal sampling needs to create disjoint subgraphs");
-  TORCH_CHECK(!edge_time_dict.has_value() || disjoint,
-              "Edge temporal sampling needs to create disjoint subgraphs");
   TORCH_CHECK(!(node_time_dict.has_value() && edge_time_dict.has_value()),
               "Only one of node-level or edge-level sampling is supported ");
 
@@ -663,32 +653,32 @@ sample(const std::vector<node_type>& node_types,
       const at::Tensor& seed = kv.value();
       slice_dict[kv.key()] = {0, seed.size(0)};
 
+      const auto seed_data = seed.data_ptr<scalar_t>();
       if constexpr (!disjoint) {
         sampled_nodes_dict[kv.key()] = pyg::utils::to_vector<scalar_t>(seed);
         mapper_dict.at(kv.key()).fill(seed);
       } else {
         auto& sampled_nodes = sampled_nodes_dict.at(kv.key());
         auto& mapper = mapper_dict.at(kv.key());
-        const auto seed_data = seed.data_ptr<scalar_t>();
         for (size_t i = 0; i < seed.numel(); ++i) {
           sampled_nodes.push_back({batch_idx, seed_data[i]});
           mapper.insert({batch_idx, seed_data[i]});
           batch_idx++;
         }
-        if (seed_time_dict.has_value()) {
-          const at::Tensor& seed_time = seed_time_dict.value().at(kv.key());
-          const auto seed_time_data = seed_time.data_ptr<scalar_t>();
-          seed_times.reserve(seed_times.size() + seed.numel());
-          for (size_t i = 0; i < seed.numel(); ++i) {
-            seed_times.push_back(seed_time_data[i]);
-          }
-        } else if (node_time_dict.has_value()) {
-          const at::Tensor& time = node_time_dict.value().at(kv.key());
-          const auto time_data = time.data_ptr<scalar_t>();
-          seed_times.reserve(seed_times.size() + seed.numel());
-          for (size_t i = 0; i < seed.numel(); ++i) {
-            seed_times.push_back(time_data[seed_data[i]]);
-          }
+      }
+      if (seed_time_dict.has_value()) {
+        const at::Tensor& seed_time = seed_time_dict.value().at(kv.key());
+        const auto seed_time_data = seed_time.data_ptr<scalar_t>();
+        seed_times.reserve(seed_times.size() + seed.numel());
+        for (size_t i = 0; i < seed.numel(); ++i) {
+          seed_times.push_back(seed_time_data[i]);
+        }
+      } else if (node_time_dict.has_value()) {
+        const at::Tensor& time = node_time_dict.value().at(kv.key());
+        const auto time_data = time.data_ptr<scalar_t>();
+        seed_times.reserve(seed_times.size() + seed.numel());
+        for (size_t i = 0; i < seed.numel(); ++i) {
+          seed_times.push_back(time_data[seed_data[i]]);
         }
       }
 
@@ -750,7 +740,7 @@ sample(const std::vector<node_type>& node_types,
                         /*generator=*/generator,
                         /*out_global_dst_nodes=*/dst_sampled_nodes);
                   }
-                } else if constexpr (!std::is_scalar<node_t>::value) {
+                } else {
                   if (edge_time_dict.has_value() &&
                       edge_time_dict.value().contains(to_rel_type(k))) {
                     // Edge-level temporal sampling:
@@ -759,12 +749,11 @@ sample(const std::vector<node_type>& node_types,
                     const auto edge_time_data =
                         edge_time.data_ptr<temporal_t>();
                     for (size_t i = begin; i < end; ++i) {
-                      const auto batch_idx = src_sampled_nodes[i].first;
                       sampler.edge_temporal_sample(
                           /*global_src_node=*/src_sampled_nodes[i],
                           /*local_src_node=*/i,
                           /*count=*/count,
-                          /*seed_time=*/seed_times[batch_idx],
+                          /*seed_time=*/seed_times[i],
                           /*time=*/edge_time_data,
                           /*dst_mapper=*/dst_mapper,
                           /*generator=*/generator,
@@ -775,12 +764,11 @@ sample(const std::vector<node_type>& node_types,
                     const at::Tensor& dst_time = node_time_dict.value().at(dst);
                     const auto dst_time_data = dst_time.data_ptr<temporal_t>();
                     for (size_t i = begin; i < end; ++i) {
-                      const auto batch_idx = src_sampled_nodes[i].first;
                       sampler.node_temporal_sample(
                           /*global_src_node=*/src_sampled_nodes[i],
                           /*local_src_node=*/i,
                           /*count=*/count,
-                          /*seed_time=*/seed_times[batch_idx],
+                          /*seed_time=*/seed_times[i],
                           /*time=*/dst_time_data,
                           /*dst_mapper=*/dst_mapper,
                           /*generator=*/generator,

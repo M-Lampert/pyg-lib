@@ -452,11 +452,16 @@ sample(const at::Tensor& rowptr,
         if (edge_time.has_value()) {
           const auto edge_time_data = edge_time.value().data_ptr<temporal_t>();
           for (size_t i = begin; i < end; ++i) {
+            if constexpr (std::is_scalar<node_t>::value) {
+              const auto batch_idx = i
+            } else {
+              const auto batch_idx = sampled_nodes[i].first;
+            }
             sampler.edge_temporal_sample(
                 /*global_src_node=*/sampled_nodes[i],
                 /*local_src_node=*/i,
                 /*count=*/count,
-                /*seed_time=*/seed_times[i],
+                /*seed_time=*/seed_times[batch_idx],
                 /*time=*/edge_time_data,
                 /*dst_mapper=*/mapper,
                 /*generator=*/generator,
@@ -467,11 +472,16 @@ sample(const at::Tensor& rowptr,
         } else {
           const auto node_time_data = node_time.value().data_ptr<temporal_t>();
           for (size_t i = begin; i < end; ++i) {
+            if constexpr (std::is_scalar<node_t>::value) {
+              const auto batch_idx = i
+            } else {
+              const auto batch_idx = sampled_nodes[i].first;
+            }
             sampler.node_temporal_sample(
                 /*global_src_node=*/sampled_nodes[i],
                 /*local_src_node=*/i,
                 /*count=*/count,
-                /*seed_time=*/seed_times[i],
+                /*seed_time=*/seed_times[batch_idx],
                 /*time=*/node_time_data,
                 /*dst_mapper=*/mapper,
                 /*generator=*/generator,
@@ -749,11 +759,16 @@ sample(const std::vector<node_type>& node_types,
                     const auto edge_time_data =
                         edge_time.data_ptr<temporal_t>();
                     for (size_t i = begin; i < end; ++i) {
+                      if constexpr (std::is_scalar<node_t>::value) {
+                        const auto batch_idx = i
+                      } else {
+                        const auto batch_idx = sampled_nodes[i].first;
+                      }
                       sampler.edge_temporal_sample(
                           /*global_src_node=*/src_sampled_nodes[i],
                           /*local_src_node=*/i,
                           /*count=*/count,
-                          /*seed_time=*/seed_times[i],
+                          /*seed_time=*/seed_times[batch_idx],
                           /*time=*/edge_time_data,
                           /*dst_mapper=*/dst_mapper,
                           /*generator=*/generator,
@@ -764,11 +779,16 @@ sample(const std::vector<node_type>& node_types,
                     const at::Tensor& dst_time = node_time_dict.value().at(dst);
                     const auto dst_time_data = dst_time.data_ptr<temporal_t>();
                     for (size_t i = begin; i < end; ++i) {
+                      if constexpr (std::is_scalar<node_t>::value) {
+                        const auto batch_idx = i
+                      } else {
+                        const auto batch_idx = sampled_nodes[i].first;
+                      }
                       sampler.node_temporal_sample(
                           /*global_src_node=*/src_sampled_nodes[i],
                           /*local_src_node=*/i,
                           /*count=*/count,
-                          /*seed_time=*/seed_times[i],
+                          /*seed_time=*/seed_times[batch_idx],
                           /*time=*/dst_time_data,
                           /*dst_mapper=*/dst_mapper,
                           /*generator=*/generator,

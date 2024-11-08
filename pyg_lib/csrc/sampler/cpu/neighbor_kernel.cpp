@@ -759,7 +759,7 @@ sample(const std::vector<node_type>& node_types,
                     for (size_t i = begin; i < end; ++i) {
                       auto batch_idx = i;
                       if constexpr (!std::is_scalar<node_t>::value) {
-                        batch_idx = sampled_nodes[i].first;
+                        batch_idx = src_sampled_nodes[i].first;
                       }
                       sampler.edge_temporal_sample(
                           /*global_src_node=*/src_sampled_nodes[i],
@@ -778,7 +778,7 @@ sample(const std::vector<node_type>& node_types,
                     for (size_t i = begin; i < end; ++i) {
                       auto batch_idx = i;
                       if constexpr (!std::is_scalar<node_t>::value) {
-                        batch_idx = sampled_nodes[i].first;
+                        batch_idx = src_sampled_nodes[i].first;
                       }
                       sampler.node_temporal_sample(
                           /*global_src_node=*/src_sampled_nodes[i],

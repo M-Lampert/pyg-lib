@@ -453,7 +453,7 @@ sample(const at::Tensor& rowptr,
           const auto edge_time_data = edge_time.value().data_ptr<temporal_t>();
           for (size_t i = begin; i < end; ++i) {
             if constexpr (std::is_scalar<node_t>::value) {
-              const auto batch_idx = i
+              const auto batch_idx = i;
             } else {
               const auto batch_idx = sampled_nodes[i].first;
             }
@@ -473,7 +473,7 @@ sample(const at::Tensor& rowptr,
           const auto node_time_data = node_time.value().data_ptr<temporal_t>();
           for (size_t i = begin; i < end; ++i) {
             if constexpr (std::is_scalar<node_t>::value) {
-              const auto batch_idx = i
+              const auto batch_idx = i;
             } else {
               const auto batch_idx = sampled_nodes[i].first;
             }
@@ -760,7 +760,7 @@ sample(const std::vector<node_type>& node_types,
                         edge_time.data_ptr<temporal_t>();
                     for (size_t i = begin; i < end; ++i) {
                       if constexpr (std::is_scalar<node_t>::value) {
-                        const auto batch_idx = i
+                        const auto batch_idx = i;
                       } else {
                         const auto batch_idx = sampled_nodes[i].first;
                       }
@@ -780,7 +780,7 @@ sample(const std::vector<node_type>& node_types,
                     const auto dst_time_data = dst_time.data_ptr<temporal_t>();
                     for (size_t i = begin; i < end; ++i) {
                       if constexpr (std::is_scalar<node_t>::value) {
-                        const auto batch_idx = i
+                        const auto batch_idx = i;
                       } else {
                         const auto batch_idx = sampled_nodes[i].first;
                       }

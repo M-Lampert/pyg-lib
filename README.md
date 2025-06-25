@@ -20,7 +20,7 @@ This is a fork of pyg-lib that enables non-disjoint temporal sampling.
 
 ## Installation
 
-We provide pre-built Python wheels for all major OS/PyTorch/CUDA combinations from Python 3.9 till 3.12, see [here](https://data.pyg.org/whl).
+We provide pre-built Python wheels for all major OS/PyTorch/CUDA combinations from Python 3.9 till 3.13, see [here](https://data.pyg.org/whl).
 Note that currently, Windows wheels are not supported (we are working on fixing this as soon as possible).
 
 To install the wheels, simply run
@@ -31,54 +31,66 @@ pip install pyg-lib -f https://data.pyg.org/whl/torch-${TORCH}+${CUDA}.html
 
 where
 
-* `${TORCH}` should be replaced by either `1.12.0`, `1.13.0`, `2.0.0`, `2.1.0`, `2.2.0`, `2.3.0`, or `2.4.0`
-* `${CUDA}` should be replaced by either `cpu`, `cu102`, `cu113`, `cu116`, `cu117`, `cu118`, or `cu121`
+* `${TORCH}` should be replaced by either `1.13.0`, `2.0.0`, `2.1.0`, `2.2.0`, `2.3.0`, `2.4.0`, `2.5.0`, `2.6.0`, or `2.7.0`
+* `${CUDA}` should be replaced by either `cpu`, `cu102`, `cu117`, `cu118`, `cu121`, `cu124`, `cu126`, or `cu128`
 
 The following combinations are supported:
 
-| PyTorch 2.4  | `cpu` | `cu113` | `cu116` | `cu117` | `cu118` | `cu121` | `cu124` |
+| PyTorch 2.7  | `cpu` | `cu117` | `cu118` | `cu121` | `cu124` | `cu126` | `cu128` |
 |--------------|-------|---------|---------|---------|---------|---------|---------|
-| **Linux**    | ✅    |         |         |         | ✅      | ✅      | ✅      |
-| **Windows**  | ✅    |         |         |         | ✅      | ✅      | ✅      |
+| **Linux**    | ✅    |         | ✅      |         |         | ✅      | ✅      |
+| **Windows**  | ✅    |         | ✅      |         |         | ✅      | ✅      |
 | **macOS**    | ✅    |         |         |         |         |         |         |
 
-| PyTorch 2.3  | `cpu` | `cu113` | `cu116` | `cu117` | `cu118` | `cu121` | `cu124` |
+| PyTorch 2.6  | `cpu` | `cu117` | `cu118` | `cu121` | `cu124` | `cu126` | `cu128` |
 |--------------|-------|---------|---------|---------|---------|---------|---------|
-| **Linux**    | ✅    |         |         |         | ✅      | ✅      |         |
-| **Windows**  | ✅    |         |         |         | ✅      | ✅      |         |
+| **Linux**    | ✅    |         | ✅      |         | ✅      | ✅      |         |
+| **Windows**  | ✅    |         | ✅      |         | ✅      | ✅      |         |
 | **macOS**    | ✅    |         |         |         |         |         |         |
 
-| PyTorch 2.2  | `cpu` | `cu113` | `cu116` | `cu117` | `cu118` | `cu121` | `cu124` |
+| PyTorch 2.5  | `cpu` | `cu117` | `cu118` | `cu121` | `cu124` | `cu126` | `cu128` |
 |--------------|-------|---------|---------|---------|---------|---------|---------|
-| **Linux**    | ✅    |         |         |         | ✅      | ✅      |         |
-| **Windows**  | ✅    |         |         |         | ✅      | ✅      |         |
-| **macOS**    | ✅    |         |         |         |         |         |         |
-                                                                                   c
-| PyTorch 2.1  | `cpu` | `cu113` | `cu116` | `cu117` | `cu118` | `cu121` | `cu124` |
-|--------------|-------|---------|---------|---------|---------|---------|---------|
-| **Linux**    | ✅    |         |         |         | ✅      | ✅      |         |
-| **Windows**  | ✅    |         |         |         | ✅      | ✅      |         |
+| **Linux**    | ✅    |         | ✅      | ✅      | ✅      |         |         |
+| **Windows**  | ✅    |         | ✅      | ✅      | ✅      |         |         |
 | **macOS**    | ✅    |         |         |         |         |         |         |
 
-| PyTorch 2.0  | `cpu` | `cu113` | `cu116` | `cu117` | `cu118` | `cu121` | `cu124` |
+| PyTorch 2.4  | `cpu` | `cu117` | `cu118` | `cu121` | `cu124` | `cu126` | `cu128` |
 |--------------|-------|---------|---------|---------|---------|---------|---------|
-| **Linux**    | ✅    |         |         | ✅      | ✅      | ✅      |         |
-| **Windows**  | ✅    |         |         | ✅      | ✅      |         |         |
+| **Linux**    | ✅    |         | ✅      | ✅      | ✅      |         |         |
+| **Windows**  | ✅    |         | ✅      | ✅      | ✅      |         |         |
 | **macOS**    | ✅    |         |         |         |         |         |         |
 
-| PyTorch 1.13 | `cpu` | `cu113` | `cu116` | `cu117` | `cu118` | `cu121` | `cu124` |
+| PyTorch 2.3  | `cpu` | `cu117` | `cu118` | `cu121` | `cu124` | `cu126` | `cu128` |
 |--------------|-------|---------|---------|---------|---------|---------|---------|
 | **Linux**    | ✅    |         | ✅      | ✅      |         |         |         |
 | **Windows**  | ✅    |         | ✅      | ✅      |         |         |         |
 | **macOS**    | ✅    |         |         |         |         |         |         |
-                                                                                   c
-| PyTorch 1.12 | `cpu` | `cu113` | `cu116` | `cu117` | `cu118` | `cu121` | `cu124` |
-|--------------|-------|---------|---------|---------|---------| --------|---------|
-| **Linux**    | ✅    | ✅      | ✅      |         |         |         |         |
+
+| PyTorch 2.2  | `cpu` | `cu117` | `cu118` | `cu121` | `cu124` | `cu126` | `cu128` |
+|--------------|-------|---------|---------|---------|---------|---------|---------|
+| **Linux**    | ✅    |         | ✅      | ✅      |         |         |         |
+| **Windows**  | ✅    |         | ✅      | ✅      |         |         |         |
+| **macOS**    | ✅    |         |         |         |         |         |         |
+
+| PyTorch 2.1  | `cpu` | `cu117` | `cu118` | `cu121` | `cu124` | `cu126` | `cu128` |
+|--------------|-------|---------|---------|---------|---------|---------|---------|
+| **Linux**    | ✅    |         | ✅      | ✅      |         |         |         |
+| **Windows**  | ✅    |         | ✅      | ✅      |         |         |         |
+| **macOS**    | ✅    |         |         |         |         |         |         |
+
+| PyTorch 2.0  | `cpu` | `cu117` | `cu118` | `cu121` | `cu124` | `cu126` | `cu128` |
+|--------------|-------|---------|---------|---------|---------|---------|---------|
+| **Linux**    | ✅    | ✅      | ✅      | ✅      |         |         |         |
 | **Windows**  | ✅    | ✅      | ✅      |         |         |         |         |
 | **macOS**    | ✅    |         |         |         |         |         |         |
 
-### Form nightly
+| PyTorch 1.13 | `cpu` | `cu117` | `cu118` | `cu121` | `cu124` | `cu126` | `cu128` |
+|--------------|-------|---------|---------|---------|---------|---------|---------|
+| **Linux**    | ✅    | ✅      |         |         |         |         |         |
+| **Windows**  | ✅    | ✅      |         |         |         |         |         |
+| **macOS**    | ✅    |         |         |         |         |         |         |
+
+### From nightly
 
 Nightly wheels are provided for Linux from Python 3.9 till 3.12:
 
@@ -90,5 +102,5 @@ pip install pyg-lib -f https://data.pyg.org/whl/nightly/torch-${TORCH}+${CUDA}.h
 
 ```
 pip install ninja wheel
-pip install git+https://github.com/pyg-team/pyg-lib.git
+pip install --no-build-isolation git+https://github.com/pyg-team/pyg-lib.git
 ```

@@ -58,7 +58,6 @@ class CMakeBuild(build_ext):
         cmake_args = [
             '-DBUILD_TEST=OFF',
             '-DBUILD_BENCHMARK=OFF',
-            '-DUSE_PYTHON=ON',
             f'-DWITH_CUDA={"ON" if WITH_CUDA else "OFF"}',
             f'-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}',
             f'-DCMAKE_RUNTIME_OUTPUT_DIRECTORY={extdir}',
@@ -133,19 +132,6 @@ else:
 setup(
     name='pyg_lib',
     version=__version__,
-    description='Low-Level Graph Neural Network Operators for PyG',
-    author='PyG Team',
-    author_email='team@pyg.org',
-    url=URL,
-    download_url=f'{URL}/archive/{__version__}.tar.gz',
-    keywords=[
-        'deep-learning',
-        'pytorch',
-        'geometric-deep-learning',
-        'graph-neural-networks',
-        'graph-convolutional-networks',
-    ],
-    python_requires='>=3.9',
     install_requires=install_requires,
     extras_require={
         'triton': triton_requires,

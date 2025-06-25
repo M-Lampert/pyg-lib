@@ -5,14 +5,17 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [0.5.0] - 2023-MM-DD
 ### Added
+- Added PyTorch 2.7 support ([#442](https://github.com/pyg-team/pyg-lib/pull/442))
+- Added CUDA >= 12.6 support ([#431](https://github.com/pyg-team/pyg-lib/pull/431))
+- Added PyTorch 2.5 support ([#360](https://github.com/pyg-team/pyg-lib/pull/338))
 - Added PyTorch 2.4 support ([#338](https://github.com/pyg-team/pyg-lib/pull/338))
 - Added PyTorch 2.3 support ([#322](https://github.com/pyg-team/pyg-lib/pull/322))
 - Added Windows support ([#315](https://github.com/pyg-team/pyg-lib/pull/315))
 - Added macOS Apple Silicon support ([#310](https://github.com/pyg-team/pyg-lib/pull/310))
 ### Changed
 ### Removed
-
 - Dropped Python 3.8 support ([#356](https://github.com/pyg-team/pyg-lib/pull/356))
+- Removed linking to Python ([#462](https://github.com/pyg-team/pyg-lib/pull/462))
 
 ## [0.4.0] - 2024-02-07
 ### Added

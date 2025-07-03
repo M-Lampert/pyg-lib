@@ -169,7 +169,11 @@ class NeighborSampler {
   // Appends the timestamps of newly sampled nodes to the provided seed_times vector.
   void update_node_seed_times(const temporal_t* node_time_data, const std::vector<node_t>& sampled_nodes, std::vector<temporal_t>& seed_times) const {
     for (size_t i = seed_times.size(); i < sampled_nodes.size(); ++i) {
-      seed_times.push_back(node_time_data[sampled_nodes[i]]);
+      if constexpr (!std::is_scalar<node_t>::value) {
+        seed_times.push_back(node_time_data[sampled_nodes[i].second]);
+      } else {
+        seed_times.push_back(node_time_data[sampled_nodes[i]]);
+      }
     }
   }
 

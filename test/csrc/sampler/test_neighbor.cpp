@@ -279,10 +279,15 @@ TEST(EdgeLevelTemporalMultiHopNeighborTest, BasicAssertions) {
       /*directed=*/true,
       /*disjoint=*/false);
 
-  auto expected_row = at::tensor({1}, options);
+  auto expected_row = at::tensor({0, 0, 0, 1}, options);
   EXPECT_TRUE(at::equal(std::get<0>(out), expected_row));
-  auto expected_col = at::tensor({2}, options);
+  auto expected_col = at::tensor({1}, options);
   EXPECT_TRUE(at::equal(std::get<1>(out), expected_col));
+  auto expected_nodes =
+      at::tensor({2, 1}, options);
+  EXPECT_TRUE(at::equal(std::get<2>(out), expected_nodes.view({-1, 2})));
+  auto expected_edges = at::tensor({1}, options);
+  EXPECT_TRUE(at::equal(std::get<3>(out).value(), expected_edges));
 }
 
 TEST(HeteroNeighborTest, BasicAssertions) {

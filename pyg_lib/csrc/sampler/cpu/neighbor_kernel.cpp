@@ -475,7 +475,7 @@ sample(const at::Tensor& rowptr,
       } else {  // Temporal:
         if (edge_time.has_value()) {
           const auto edge_time_data = edge_time.value().data_ptr<temporal_t>();
-          for (size_t i = begin; i < end; ++i) {
+            for (size_t i = begin; i < end; ++i) {
             std::cout << "i: " << i << std::endl;
             std::cout << "sampled_nodes before update: ";
             for (const auto& n : sampled_nodes) {
@@ -512,7 +512,6 @@ sample(const at::Tensor& rowptr,
             }
             if constexpr (distributed)
               cumsum_neighbors_per_node.push_back(sampled_nodes.size());
-          }
         } else {
           const auto node_time_data = node_time.value().data_ptr<temporal_t>();
           for (size_t i = begin; i < end; ++i) {

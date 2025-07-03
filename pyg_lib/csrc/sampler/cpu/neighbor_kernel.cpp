@@ -160,8 +160,8 @@ class NeighborSampler {
   }
 
   // Appends the timestamps of newly sampled edges to the provided seed_times vector.
-  void update_edge_seed_times(const temporal_t* edge_time_data, std::vector<temporal_t>& seed_times) const {
-    for (size_t i = seed_times.size(); i < sampled_edge_ids_.size(); ++i) {
+  void update_edge_seed_times(const temporal_t* edge_time_data, const std::vector<node_t>& sampled_nodes, std::vector<temporal_t>& seed_times) const {
+    for (size_t i = seed_times.size(); i < sampled_nodes.size(); ++i) {
       seed_times.push_back(edge_time_data[sampled_edge_ids_[i]]);
     }
   }
@@ -503,6 +503,7 @@ sample(const at::Tensor& rowptr,
             std::cout << std::endl;
             sampler.update_edge_seed_times(
               /*edge_time_data=*/edge_time_data,
+              /*sampled_nodes=*/sampled_nodes,
               /*seed_times=*/seed_times);
             std::cout << "seed_times after update: ";
             for (const auto& t : seed_times) {
@@ -812,6 +813,7 @@ sample(const std::vector<node_type>& node_types,
                           /*out_global_dst_nodes=*/dst_sampled_nodes);
                       sampler.update_edge_seed_times(
                           /*edge_time_data=*/edge_time_data,
+                          /*sampled_nodes=*/dst_sampled_nodes,
                           /*seed_times=*/seed_times);
                     }
                   } else {

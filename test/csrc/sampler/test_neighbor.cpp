@@ -282,10 +282,16 @@ TEST(EdgeLevelTemporalMultiHopNeighborTest, BasicAssertions) {
       /*disjoint=*/false);
 
   auto expected_row = at::tensor({0, 0, 0, 1}, options);
+  std::cout << "Expected row: " << expected_row << std::endl;
+  std::cout << "Actual row: " << std::get<0>(out) << std::endl;
   EXPECT_TRUE(at::equal(std::get<0>(out), expected_row));
   auto expected_col = at::tensor({1}, options);
+  std::cout << "Expected col: " << expected_col << std::endl;
+  std::cout << "Actual col: " << std::get<1>(out) << std::endl;
   EXPECT_TRUE(at::equal(std::get<1>(out), expected_col));
   auto expected_nodes = at::tensor({2, 1}, options);
+  std::cout << "Expected nodes: " << expected_nodes << std::endl;
+  std::cout << "Actual nodes: " << std::get<2>(out) << std::endl;
   EXPECT_TRUE(at::equal(std::get<2>(out), expected_nodes));
   auto expected_edges = at::tensor({1}, options);
   std::cout << "Expected edges: " << expected_edges << std::endl;

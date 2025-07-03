@@ -485,9 +485,19 @@ sample(const at::Tensor& rowptr,
                 /*dst_mapper=*/mapper,
                 /*generator=*/generator,
                 /*out_global_dst_nodes=*/sampled_nodes);
+            std::cout << "seed_times before update: ";
+            for (const auto& t : seed_times) {
+              std::cout << t << " ";
+            }
+            std::cout << std::endl;
             sampler.update_edge_seed_times(
-                /*edge_time_data=*/edge_time_data,
-                /*seed_times=*/seed_times);
+              /*edge_time_data=*/edge_time_data,
+              /*seed_times=*/seed_times);
+            std::cout << "seed_times after update: ";
+            for (const auto& t : seed_times) {
+              std::cout << t << " ";
+            }
+            std::cout << std::endl;
             if constexpr (distributed)
               cumsum_neighbors_per_node.push_back(sampled_nodes.size());
           }

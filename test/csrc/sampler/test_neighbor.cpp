@@ -262,9 +262,6 @@ TEST(EdgeLevelTemporalMultiHopNeighborTest, BasicAssertions) {
   auto rowptr = at::tensor({1, 0}, options);
   auto col = at::tensor({2, 1}, options);
 
-  auto graph = std::make_tuple(rowptr, col);
-  auto rowptr = std::get<0>(graph);
-
   // Time is equal to edge ID:
   auto edge_time = at::arange(col.numel(), options);
 

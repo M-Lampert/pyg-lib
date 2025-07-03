@@ -161,6 +161,27 @@ class NeighborSampler {
 
   // Appends the timestamps of newly sampled edges to the provided seed_times vector.
   void update_edge_seed_times(const temporal_t* edge_time_data, const std::vector<node_t>& sampled_nodes, std::vector<temporal_t>& seed_times) const {
+    // Debug print: sampled_edge_ids_
+    std::cout << "sampled_edge_ids_: ";
+    for (const auto& eid : sampled_edge_ids_) {
+      std::cout << eid << " ";
+    }
+    std::cout << std::endl;
+
+    // Debug print: all values of edge_time_data
+    std::cout << "edge_time_data (all values): ";
+    // NOTE: You must know the length of edge_time_data. Here, we assume sampled_edge_ids_ contains valid indices.
+    // If you know the total number of edges, replace 'max_eid' with that value.
+    size_t max_eid = 0;
+    for (const auto& eid : sampled_edge_ids_) {
+      if (static_cast<size_t>(eid) > max_eid) max_eid = eid;
+    }
+    // Print up to max_eid+1 elements (assuming edge_time_data is at least this long)
+    for (size_t j = 0; j <= max_eid; ++j) {
+      std::cout << edge_time_data[j] << " ";
+    }
+    std::cout << std::endl;
+
     for (size_t i = seed_times.size(); i < sampled_nodes.size(); ++i) {
       seed_times.push_back(edge_time_data[sampled_edge_ids_[i]]);
     }

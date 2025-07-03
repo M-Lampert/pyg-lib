@@ -259,11 +259,11 @@ TEST(EdgeLevelTemporalNeighborTest, BasicAssertions) {
 TEST(EdgeLevelTemporalMultiHopNeighborTest, BasicAssertions) {
   auto options = at::TensorOptions().dtype(at::kLong);
 
-  auto rowptr = at::tensor({1, 0}, options);
-  auto col = at::tensor({2, 1}, options);
+  auto rowptr = at::tensor({0, 1, 2}, options);
+  auto col = at::tensor({1, 2}, options);
 
   // Time is equal to edge ID:
-  auto edge_time = at::arange(col.numel(), options);
+  auto edge_time = at::tensor({2, 1}, options);
 
   auto out = pyg::sampler::neighbor_sample(
       /*rowptr=*/rowptr,

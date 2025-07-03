@@ -476,18 +476,29 @@ sample(const at::Tensor& rowptr,
         if (edge_time.has_value()) {
           const auto edge_time_data = edge_time.value().data_ptr<temporal_t>();
           for (size_t i = begin; i < end; ++i) {
-            sampler.edge_temporal_sample(
-                /*global_src_node=*/sampled_nodes[i],
-                /*local_src_node=*/i,
-                /*count=*/count,
-                /*seed_time=*/seed_times[i],
-                /*time=*/edge_time_data,
-                /*dst_mapper=*/mapper,
-                /*generator=*/generator,
-                /*out_global_dst_nodes=*/sampled_nodes);
+            std::cout << "i: " << i << std::endl;
+            std::cout << "sampled_nodes before update: ";
+            for (const auto& n : sampled_nodes) {
+              std::cout << n << " ";
+            }
+            std::cout << std::endl;
             std::cout << "seed_times before update: ";
             for (const auto& t : seed_times) {
               std::cout << t << " ";
+            }
+            std::cout << std::endl;
+            sampler.edge_temporal_sample(
+              /*global_src_node=*/sampled_nodes[i],
+              /*local_src_node=*/i,
+              /*count=*/count,
+              /*seed_time=*/seed_times[i],
+              /*time=*/edge_time_data,
+              /*dst_mapper=*/mapper,
+              /*generator=*/generator,
+              /*out_global_dst_nodes=*/sampled_nodes);
+            std::cout << "sampled_nodes after update: ";
+            for (const auto& n : sampled_nodes) {
+              std::cout << n << " ";
             }
             std::cout << std::endl;
             sampler.update_edge_seed_times(
@@ -498,6 +509,7 @@ sample(const at::Tensor& rowptr,
               std::cout << t << " ";
             }
             std::cout << std::endl;
+            }
             if constexpr (distributed)
               cumsum_neighbors_per_node.push_back(sampled_nodes.size());
           }

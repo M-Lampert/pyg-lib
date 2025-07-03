@@ -256,6 +256,38 @@ TEST(EdgeLevelTemporalNeighborTest, BasicAssertions) {
   EXPECT_TRUE(at::equal(std::get<3>(out2).value(), at::zeros(0, options)));
 }
 
+TEST(EdgeLevelTemporalMultiHopNeighborTest, BasicAssertions) {
+  auto options = at::TensorOptions().dtype(at::kLong);
+
+  auto rowptr = at::tensor({1, 0}, options);
+  auto col = at::tensor({2, 1}, options);
+
+  auto graph = std::make_tuple(rowptr, col);
+  auto rowptr = std::get<0>(graph);
+
+  // Time is equal to edge ID:
+  auto edge_time = at::arange(col.numel(), options);
+
+  auto out = pyg::sampler::neighbor_sample(
+      /*rowptr=*/rowptr,
+      /*col=*/col,
+      /*seed=*/at::tensor({2}, options),
+      /*num_neighbors=*/{1, 1},
+      /*node_time=*/c10::nullopt,
+      /*edge_time=*/edge_time,
+      /*seed_time=*/at::tensor({4}, options),
+      /*edge_weight=*/c10::nullopt,
+      /*csc=*/false,
+      /*replace=*/false,
+      /*directed=*/true,
+      /*disjoint=*/false);
+
+  auto expected_row = at::tensor({1}, options);
+  EXPECT_TRUE(at::equal(std::get<0>(out), expected_row));
+  auto expected_col = at::tensor({2}, options);
+  EXPECT_TRUE(at::equal(std::get<1>(out), expected_col));
+}
+
 TEST(HeteroNeighborTest, BasicAssertions) {
   auto options = at::TensorOptions().dtype(at::kLong);
 

@@ -178,6 +178,8 @@ TEST(NodeLevelTemporalNeighborTest, BasicAssertions) {
       at::tensor({0, 2, 1, 3, 0, 1, 1, 2, 0, 0, 1, 1}, options);
   EXPECT_TRUE(at::equal(std::get<2>(out1), expected_nodes.view({-1, 2})));
   auto expected_edges = at::tensor({4, 6, 2, 3, 4, 5}, options);
+  std::cout << "expected_edges: " << expected_edges << std::endl;
+  std::cout << "actual_edges: " << std::get<3>(out1).value() << std::endl;
   EXPECT_TRUE(at::equal(std::get<3>(out1).value(), expected_edges));
 
   auto out2 = pyg::sampler::neighbor_sample(

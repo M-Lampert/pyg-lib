@@ -287,7 +287,7 @@ TEST(EdgeLevelTemporalMultiHopNeighborTest, BasicAssertions) {
   EXPECT_TRUE(at::equal(std::get<1>(out), expected_col));
   auto expected_nodes =
       at::tensor({2, 1}, options);
-  EXPECT_TRUE(at::equal(std::get<2>(out), expected_nodes.view({-1, 2})));
+  EXPECT_TRUE(at::equal(std::get<2>(out), expected_nodes));
   auto expected_edges = at::tensor({1}, options);
   EXPECT_TRUE(at::equal(std::get<3>(out).value(), expected_edges));
 }

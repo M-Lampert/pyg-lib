@@ -161,26 +161,8 @@ class NeighborSampler {
 
   // Appends the timestamps of newly sampled edges to the provided seed_times vector.
   void update_edge_seed_times(const temporal_t* edge_time_data, const std::vector<node_t>& sampled_nodes, std::vector<temporal_t>& seed_times, size_t num_seed_nodes) const {
-    std::cout << "sampled_edge_ids_: ";
-    for (const auto& id : sampled_edge_ids_) {
-      std::cout << id << " ";
-    }
-    std::cout << std::endl;
-    std::cout << "edge_time_data: ";
-    for (size_t i = 0; i < sampled_edge_ids_.size(); ++i) {
-      std::cout << edge_time_data[i] << " ";
-    }
-    std::cout << std::endl;
     for (size_t i = seed_times.size(); i < sampled_nodes.size(); ++i) {
       auto edge_idx = i - num_seed_nodes;
-      std::cout << "i: " << i << ", i - num_seed_nodes: " << edge_idx;
-      if (edge_idx < sampled_edge_ids_.size()) {
-        std::cout << ", sampled_edge_ids_[" << edge_idx << "]: " << sampled_edge_ids_[edge_idx];
-        std::cout << ", edge_time_data[sampled_edge_ids_[" << edge_idx << "]]: " << edge_time_data[sampled_edge_ids_[edge_idx]];
-      } else {
-        std::cout << " (edge_idx out of bounds)";
-      }
-      std::cout << std::endl;
       seed_times.push_back(edge_time_data[sampled_edge_ids_[edge_idx]]);
     }
   }
@@ -494,18 +476,6 @@ sample(const at::Tensor& rowptr,
       } else {  // Temporal:
         if (edge_time.has_value()) {
           const auto edge_time_data = edge_time.value().data_ptr<temporal_t>();
-            for (size_t i = begin; i < end; ++i) {
-            std::cout << "i: " << i << std::endl;
-            std::cout << "sampled_nodes before update: ";
-            for (const auto& n : sampled_nodes) {
-              std::cout << n << " ";
-            }
-            std::cout << std::endl;
-            std::cout << "seed_times before update: ";
-            for (const auto& t : seed_times) {
-              std::cout << t << " ";
-            }
-            std::cout << std::endl;
             sampler.edge_temporal_sample(
               /*global_src_node=*/sampled_nodes[i],
               /*local_src_node=*/i,
@@ -515,22 +485,11 @@ sample(const at::Tensor& rowptr,
               /*dst_mapper=*/mapper,
               /*generator=*/generator,
               /*out_global_dst_nodes=*/sampled_nodes);
-            std::cout << "sampled_nodes after update: ";
-            for (const auto& n : sampled_nodes) {
-              std::cout << n << " ";
-            }
-            std::cout << std::endl;
             sampler.update_edge_seed_times(
               /*edge_time_data=*/edge_time_data,
               /*sampled_nodes=*/sampled_nodes,
               /*seed_times=*/seed_times,
               /*num_seed_nodes=*/num_sampled_nodes_per_hop[0]);
-            std::cout << "seed_times after update: ";
-            for (const auto& t : seed_times) {
-              std::cout << t << " ";
-            }
-            std::cout << std::endl;
-            }
             if constexpr (distributed)
               cumsum_neighbors_per_node.push_back(sampled_nodes.size());
         } else {

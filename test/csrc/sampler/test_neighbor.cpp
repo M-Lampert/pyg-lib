@@ -256,6 +256,8 @@ TEST(EdgeLevelTemporalNeighborTest, BasicAssertions) {
   EXPECT_TRUE(at::equal(std::get<3>(out2).value(), at::zeros(0, options)));
 }
 
+// Test if second hop neighbors that are in the future of the first hop
+// are not sampled.
 TEST(EdgeLevelTemporalMultiHopNeighborTest, BasicAssertions) {
   auto options = at::TensorOptions().dtype(at::kLong);
 
@@ -279,9 +281,9 @@ TEST(EdgeLevelTemporalMultiHopNeighborTest, BasicAssertions) {
       /*directed=*/true,
       /*disjoint=*/false);
 
-  auto expected_row = at::tensor({0, 0, 0, 1}, options);
+  auto expected_row = at::tensor({0, 0, 1, 1}, options);
   EXPECT_TRUE(at::equal(std::get<0>(out), expected_row));
-  auto expected_col = at::tensor({1}, options);
+  auto expected_col = at::tensor({2}, options);
   EXPECT_TRUE(at::equal(std::get<1>(out), expected_col));
   auto expected_nodes =
       at::tensor({2, 1}, options);

@@ -259,8 +259,8 @@ TEST(EdgeLevelTemporalNeighborTest, BasicAssertions) {
 TEST(EdgeLevelTemporalMultiHopNeighborTest, BasicAssertions) {
   auto options = at::TensorOptions().dtype(at::kLong);
 
-  auto rowptr = at::tensor({0, 1, 2, 2}, options);
-  auto col = at::tensor({1, 2}, options);
+  auto rowptr = at::tensor({0, 0, 1, 2}, options);
+  auto col = at::tensor({0, 1}, options);
 
   // Time is equal to edge ID:
   auto edge_time = at::tensor({2, 1}, options);

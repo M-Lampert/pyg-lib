@@ -637,7 +637,7 @@ sample(const std::vector<node_type>& node_types,
     phmap::flat_hash_map<node_type, Mapper<node_t, scalar_t>> mapper_dict;
     phmap::flat_hash_map<edge_type, NeighborSamplerImpl> sampler_dict;
     phmap::flat_hash_map<node_type, std::pair<size_t, size_t>> slice_dict;
-    std::vector<scalar_t> seed_times;
+    std::vector<temporal_t> seed_times;
 
     for (const auto& k : node_types) {
       const auto N = num_nodes_dict.count(k) > 0 ? num_nodes_dict.at(k) : 0;

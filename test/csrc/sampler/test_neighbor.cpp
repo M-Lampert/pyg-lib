@@ -303,7 +303,7 @@ TEST(EdgeLevelNonDisjointTest, BasicAssertions) {
   auto out = pyg::sampler::neighbor_sample(
       /*rowptr=*/rowptr,
       /*col=*/col,
-      /*seed=*/at::tensor({1, 0}, options),
+      /*seed=*/at::tensor({2, 1}, options),
       /*num_neighbors=*/{1, 1},
       /*node_time=*/c10::nullopt,
       /*edge_time=*/edge_time,

@@ -170,14 +170,14 @@ TEST(NodeLevelTemporalNeighborTest, BasicAssertions) {
       /*disjoint=*/true);
 
   // Expect only the earlier neighbors or the same node to be sampled:
-  auto expected_row = at::tensor({0, 1, 2, 2, 3, 3}, options);
+  auto expected_row = at::tensor({0, 1, 2, 3}, options);
   EXPECT_TRUE(at::equal(std::get<0>(out1), expected_row));
-  auto expected_col = at::tensor({2, 3, 4, 0, 5, 1}, options);
+  auto expected_col = at::tensor({2, 3, 4, 5}, options);
   EXPECT_TRUE(at::equal(std::get<1>(out1), expected_col));
   auto expected_nodes =
       at::tensor({0, 2, 1, 3, 0, 1, 1, 2, 0, 0, 1, 1}, options);
   EXPECT_TRUE(at::equal(std::get<2>(out1), expected_nodes.view({-1, 2})));
-  auto expected_edges = at::tensor({4, 6, 2, 3, 4, 5}, options);
+  auto expected_edges = at::tensor({4, 6, 2, 4}, options);
   EXPECT_TRUE(at::equal(std::get<3>(out1).value(), expected_edges));
 
   auto out2 = pyg::sampler::neighbor_sample(
@@ -254,6 +254,41 @@ TEST(EdgeLevelTemporalNeighborTest, BasicAssertions) {
   EXPECT_TRUE(at::equal(std::get<2>(out2),
                         at::tensor({0, 2, 1, 3}, options).view({-1, 2})));
   EXPECT_TRUE(at::equal(std::get<3>(out2).value(), at::zeros(0, options)));
+}
+
+// Test if second hop neighbors that are in the future of the first hop
+// are not sampled.
+TEST(EdgeLevelTemporalMultiHopNeighborTest, BasicAssertions) {
+  auto options = at::TensorOptions().dtype(at::kLong);
+
+  auto rowptr = at::tensor({0, 0, 1, 2}, options);
+  auto col = at::tensor({0, 1}, options);
+
+  // Time is equal to edge ID:
+  auto edge_time = at::tensor({2, 1}, options);
+
+  auto out = pyg::sampler::neighbor_sample(
+      /*rowptr=*/rowptr,
+      /*col=*/col,
+      /*seed=*/at::tensor({2}, options),
+      /*num_neighbors=*/{1, 1},
+      /*node_time=*/c10::nullopt,
+      /*edge_time=*/edge_time,
+      /*seed_time=*/at::tensor({4}, options),
+      /*edge_weight=*/c10::nullopt,
+      /*csc=*/false,
+      /*replace=*/false,
+      /*directed=*/true,
+      /*disjoint=*/false);
+
+  auto expected_row = at::tensor({0}, options);
+  EXPECT_TRUE(at::equal(std::get<0>(out), expected_row));
+  auto expected_col = at::tensor({1}, options);
+  EXPECT_TRUE(at::equal(std::get<1>(out), expected_col));
+  auto expected_nodes = at::tensor({2, 1}, options);
+  EXPECT_TRUE(at::equal(std::get<2>(out), expected_nodes));
+  auto expected_edges = at::tensor({1}, options);
+  EXPECT_TRUE(at::equal(std::get<3>(out).value(), expected_edges));
 }
 
 TEST(HeteroNeighborTest, BasicAssertions) {

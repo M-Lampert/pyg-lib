@@ -315,12 +315,20 @@ TEST(EdgeLevelNonDisjointTest, BasicAssertions) {
       /*disjoint=*/false);
 
   auto expected_row = at::tensor({0}, options);
+  std::cout << "expected_row: " << expected_row << std::endl;
+  std::cout << "actual_row: " << std::get<0>(out) << std::endl;
   EXPECT_TRUE(at::equal(std::get<0>(out), expected_row));
   auto expected_col = at::tensor({2}, options);
+  std::cout << "expected_col: " << expected_col << std::endl;
+  std::cout << "actual_col: " << std::get<1>(out) << std::endl;
   EXPECT_TRUE(at::equal(std::get<1>(out), expected_col));
   auto expected_nodes = at::tensor({1, 0, 2}, options);
+  std::cout << "expected_nodes: " << expected_nodes << std::endl;
+  std::cout << "actual_nodes: " << std::get<2>(out) << std::endl;
   EXPECT_TRUE(at::equal(std::get<2>(out), expected_nodes));
   auto expected_edges = at::tensor({0}, options);
+  std::cout << "expected_edges: " << expected_edges << std::endl;
+  std::cout << "actual_edges: " << std::get<3>(out).value() << std::endl;
   EXPECT_TRUE(at::equal(std::get<3>(out).value(), expected_edges));
 }
 

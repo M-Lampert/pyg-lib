@@ -123,7 +123,7 @@ class NeighborSampler {
 
     // Find new `row_end` such that all neighbors fulfill temporal constraints:
     auto it = std::upper_bound(
-        time + row_start, time + row_end, seed_time,
+        time + row_start, time + row_end, seed_time,  // Insert -1 here
         [&](const scalar_t& a, const scalar_t& b) { return a < b; });
     row_end = it - time;
 
@@ -432,13 +432,37 @@ sample(const at::Tensor& rowptr,
     }
     if (seed_time.has_value()) {
       const auto seed_time_data = seed_time.value().data_ptr<temporal_t>();
-      for (size_t i = 0; i < seed.numel(); ++i) {
-        seed_times.push_back(seed_time_data[i]);
+      // For non-disjoint sampling, we use the minimum seed_time for all seeds
+      // to prevent data leakage.
+      if constexpr (!disjoint) {
+        temporal_t minimum_seed_time = seed_time_data[0];
+        for (size_t i = 1; i < seed.numel(); ++i) {
+          if (seed_time_data[i] < minimum_seed_time)
+            minimum_seed_time = seed_time_data[i];
+        }
+        for (size_t i = 0; i < seed.numel(); ++i) {
+          seed_times.push_back(minimum_seed_time);
+        }
+      } else {
+        for (size_t i = 0; i < seed.numel(); ++i) {
+          seed_times.push_back(seed_time_data[i]);
+        }
       }
     } else if (node_time.has_value()) {
       const auto time_data = node_time.value().data_ptr<temporal_t>();
-      for (size_t i = 0; i < seed.numel(); ++i) {
-        seed_times.push_back(time_data[seed_data[i]]);
+      if constexpr (!disjoint) {
+        temporal_t minimum_time = time_data[seed_data[0]];
+        for (size_t i = 1; i < seed.numel(); ++i) {
+          if (time_data[seed_data[i]] < minimum_time)
+            minimum_time = time_data[seed_data[i]];
+        }
+        for (size_t i = 0; i < seed.numel(); ++i) {
+          seed_times.push_back(minimum_time);
+        }
+      } else {
+        for (size_t i = 0; i < seed.numel(); ++i) {
+          seed_times.push_back(time_data[seed_data[i]]);
+        }
       }
     }
 
@@ -704,15 +728,37 @@ sample(const std::vector<node_type>& node_types,
         const at::Tensor& seed_time = seed_time_dict.value().at(kv.key());
         const auto seed_time_data = seed_time.data_ptr<scalar_t>();
         seed_times.reserve(seed_times.size() + seed.numel());
-        for (size_t i = 0; i < seed.numel(); ++i) {
-          seed_times.push_back(seed_time_data[i]);
+        if constexpr(!disjoint) {
+          scalar_t minimum_seed_time = seed_time_data[0];
+          for (size_t i = 1; i < seed.numel(); ++i) {
+            if (seed_time_data[i] < minimum_seed_time)
+              minimum_seed_time = seed_time_data[i];
+          }
+          for (size_t i = 0; i < seed.numel(); ++i) {
+            seed_times.push_back(minimum_seed_time);
+          }
+        } else {
+          for (size_t i = 0; i < seed.numel(); ++i) {
+            seed_times.push_back(seed_time_data[i]);
+          }
         }
       } else if (node_time_dict.has_value()) {
         const at::Tensor& time = node_time_dict.value().at(kv.key());
         const auto time_data = time.data_ptr<scalar_t>();
         seed_times.reserve(seed_times.size() + seed.numel());
-        for (size_t i = 0; i < seed.numel(); ++i) {
-          seed_times.push_back(time_data[seed_data[i]]);
+        if constexpr(!disjoint) {
+          scalar_t minimum_time = time_data[seed_data[0]];
+          for (size_t i = 1; i < seed.numel(); ++i) {
+            if (time_data[seed_data[i]] < minimum_time)
+              minimum_time = time_data[seed_data[i]];
+          }
+          for (size_t i = 0; i < seed.numel(); ++i) {
+            seed_times.push_back(minimum_time);
+          }
+        } else {
+          for (size_t i = 0; i < seed.numel(); ++i) {
+            seed_times.push_back(time_data[seed_data[i]]);
+          }
         }
       }
 

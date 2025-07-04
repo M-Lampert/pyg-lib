@@ -491,6 +491,7 @@ sample(const at::Tensor& rowptr,
               /*sampled_nodes=*/sampled_nodes,
               /*seed_times=*/seed_times,
               /*num_seed_nodes=*/num_sampled_nodes_per_hop[0]);
+            std::cout << "Sampled Node: " << sampled_nodes[i] << " with seed time: " << seed_times[i] << std::endl; 
             if constexpr (distributed)
               cumsum_neighbors_per_node.push_back(sampled_nodes.size());
           }

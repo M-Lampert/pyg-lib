@@ -123,7 +123,7 @@ class NeighborSampler {
 
     // Find new `row_end` such that all neighbors fulfill temporal constraints:
     auto it = std::upper_bound(
-        time + row_start, time + row_end, seed_time,  // Insert -1 here
+        time + row_start, time + row_end, seed_time - 1,
         [&](const scalar_t& a, const scalar_t& b) { return a < b; });
     row_end = it - time;
 

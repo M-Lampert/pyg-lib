@@ -108,8 +108,7 @@ class NeighborSampler {
     }
 
     _sample(global_src_node, local_src_node, row_start, row_end, count,
-            dst_mapper, generator, out_global_dst_nodes, out_seed_times,
-            c10::nullopt, time);
+            dst_mapper, generator, out_global_dst_nodes, out_seed_times);
   }
 
   void edge_temporal_sample(const node_t global_src_node,
@@ -146,8 +145,7 @@ class NeighborSampler {
     }
 
     _sample(global_src_node, local_src_node, row_start, row_end, count,
-            dst_mapper, generator, out_global_dst_nodes, out_seed_times,
-            time);
+            dst_mapper, generator, out_global_dst_nodes, out_seed_times);
   }
 
   std::tuple<at::Tensor, at::Tensor, c10::optional<at::Tensor>>

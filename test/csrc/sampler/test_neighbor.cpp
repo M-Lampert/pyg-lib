@@ -209,7 +209,7 @@ TEST(EdgeLevelTemporalNeighborTest, BasicAssertions) {
   auto col = std::get<1>(graph);
 
   // Time is equal to edge ID:
-  auto edge_time = at::arange(col.numel(), options) + 1;
+  auto edge_time = at::arange(1, col.numel()+1, options);
 
   auto out = pyg::sampler::neighbor_sample(
       /*rowptr=*/rowptr,
@@ -227,13 +227,21 @@ TEST(EdgeLevelTemporalNeighborTest, BasicAssertions) {
 
   // Expect only the earlier neighbors or the same node to be sampled:
   auto expected_row = at::tensor({0, 0, 1, 2, 2, 4, 4}, options);
+  std::cout << "Expected row: " << expected_row << std::endl;
+  std::cout << "Actual row: " << std::get<0>(out) << std::endl;
   EXPECT_TRUE(at::equal(std::get<0>(out), expected_row));
   auto expected_col = at::tensor({2, 3, 4, 5, 0, 6, 1}, options);
+  std::cout << "Expected col: " << expected_col << std::endl;
+  std::cout << "Actual col: " << std::get<1>(out) << std::endl;
   EXPECT_TRUE(at::equal(std::get<1>(out), expected_col));
   auto expected_nodes =
       at::tensor({0, 2, 1, 3, 0, 1, 0, 3, 1, 2, 0, 0, 1, 1}, options);
+  std::cout << "Expected nodes: " << expected_nodes.view({-1, 2}) << std::endl;
+  std::cout << "Actual nodes: " << std::get<2>(out) << std::endl;
   EXPECT_TRUE(at::equal(std::get<2>(out), expected_nodes.view({-1, 2})));
   auto expected_edges = at::tensor({4, 5, 6, 2, 3, 4, 5}, options);
+  std::cout << "Expected edges: " << expected_edges << std::endl;
+  std::cout << "Actual edges: " << std::get<3>(out).value() << std::endl;
   EXPECT_TRUE(at::equal(std::get<3>(out).value(), expected_edges));
 
   auto out2 = pyg::sampler::neighbor_sample(

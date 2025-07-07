@@ -30,8 +30,11 @@ class NeighborSampler {
  public:
   NeighborSampler(const scalar_t* rowptr,
                   const scalar_t* col,
-                  const std::string temporal_strategy)
-      : rowptr_(rowptr), col_(col), temporal_strategy_(temporal_strategy) {
+                  const std::string temporal_strategy,
+                  const temporal_t* edge_time_data = nullptr,
+                  const temporal_t* node_time_data = nullptr)
+      : rowptr_(rowptr), col_(col), temporal_strategy_(temporal_strategy),
+        edge_time_data_(edge_time_data), node_time_data_(node_time_data) {
     TORCH_CHECK(temporal_strategy == "uniform" || temporal_strategy == "last",
                 "No valid temporal strategy found");
   }
@@ -78,7 +81,8 @@ class NeighborSampler {
                             const temporal_t* time,
                             pyg::sampler::Mapper<node_t, scalar_t>& dst_mapper,
                             pyg::random::RandintEngine<scalar_t>& generator,
-                            std::vector<node_t>& out_global_dst_nodes) {
+                            std::vector<node_t>& out_global_dst_nodes,
+                            std::vector<temporal_t>& out_seed_times) {
     auto row_start = rowptr_[to_scalar_t(global_src_node)];
     auto row_end = rowptr_[to_scalar_t(global_src_node) + 1];
 
@@ -104,7 +108,7 @@ class NeighborSampler {
     }
 
     _sample(global_src_node, local_src_node, row_start, row_end, count,
-            dst_mapper, generator, out_global_dst_nodes);
+            dst_mapper, generator, out_global_dst_nodes, out_seed_times);
   }
 
   void edge_temporal_sample(const node_t global_src_node,
@@ -114,7 +118,8 @@ class NeighborSampler {
                             const temporal_t* time,
                             pyg::sampler::Mapper<node_t, scalar_t>& dst_mapper,
                             pyg::random::RandintEngine<scalar_t>& generator,
-                            std::vector<node_t>& out_global_dst_nodes) {
+                            std::vector<node_t>& out_global_dst_nodes,
+                            std::vector<temporal_t>& out_seed_times) {
     auto row_start = rowptr_[to_scalar_t(global_src_node)];
     auto row_end = rowptr_[to_scalar_t(global_src_node) + 1];
 
@@ -140,7 +145,7 @@ class NeighborSampler {
     }
 
     _sample(global_src_node, local_src_node, row_start, row_end, count,
-            dst_mapper, generator, out_global_dst_nodes);
+            dst_mapper, generator, out_global_dst_nodes, out_seed_times);
   }
 
   std::tuple<at::Tensor, at::Tensor, c10::optional<at::Tensor>>
@@ -156,25 +161,6 @@ class NeighborSampler {
       return std::make_tuple(row, col, edge_id);
     } else {
       return std::make_tuple(col, row, edge_id);
-    }
-  }
-
-  // Appends the timestamps of newly sampled edges to the provided seed_times vector.
-  void update_edge_seed_times(const temporal_t* edge_time_data, const std::vector<node_t>& sampled_nodes, std::vector<temporal_t>& seed_times, size_t num_seed_nodes) const {
-    for (size_t i = seed_times.size(); i < sampled_nodes.size(); ++i) {
-      auto edge_idx = i - num_seed_nodes;
-      seed_times.push_back(edge_time_data[sampled_edge_ids_[edge_idx]]);
-    }
-  }
-
-  // Appends the timestamps of newly sampled nodes to the provided seed_times vector.
-  void update_node_seed_times(const temporal_t* node_time_data, const std::vector<node_t>& sampled_nodes, std::vector<temporal_t>& seed_times) const {
-    for (size_t i = seed_times.size(); i < sampled_nodes.size(); ++i) {
-      if constexpr (!std::is_scalar<node_t>::value) {
-        seed_times.push_back(node_time_data[sampled_nodes[i].second]);
-      } else {
-        seed_times.push_back(node_time_data[sampled_nodes[i]]);
-      }
     }
   }
 
@@ -200,14 +186,15 @@ class NeighborSampler {
                const int64_t count,
                pyg::sampler::Mapper<node_t, scalar_t>& dst_mapper,
                pyg::random::RandintEngine<scalar_t>& generator,
-               std::vector<node_t>& out_global_dst_nodes) {
+               std::vector<node_t>& out_global_dst_nodes,
+               c10::optional<std::reference_wrapper<std::vector<temporal_t>>> out_seed_times = c10::nullopt) {
     const auto population = row_end - row_start;
 
     // Case 1: Sample the full neighborhood:
     if (count < 0 || (!replace && count >= population)) {
       for (scalar_t edge_id = row_start; edge_id < row_end; ++edge_id) {
         add(edge_id, global_src_node, local_src_node, dst_mapper,
-            out_global_dst_nodes);
+            out_global_dst_nodes, out_seed_times);
       }
     }
 
@@ -218,12 +205,12 @@ class NeighborSampler {
             generator.generate_range_of_ints(row_start, row_end, count));
         for (const auto edge_id : arr)
           add(edge_id, global_src_node, local_src_node, dst_mapper,
-              out_global_dst_nodes);
+              out_global_dst_nodes, out_seed_times);
       } else {
         for (int64_t i = 0; i < count; ++i) {
           const auto edge_id = generator(row_start, row_end);
           add(edge_id, global_src_node, local_src_node, dst_mapper,
-              out_global_dst_nodes);
+              out_global_dst_nodes, out_seed_times);
         }
       }
     }
@@ -244,7 +231,7 @@ class NeighborSampler {
           }
           const auto edge_id = row_start + rnd;
           add(edge_id, global_src_node, local_src_node, dst_mapper,
-              out_global_dst_nodes);
+              out_global_dst_nodes, out_seed_times);
         }
       } else {
         for (auto i = population - count; i < population; ++i) {
@@ -255,7 +242,7 @@ class NeighborSampler {
           }
           const auto edge_id = row_start + rnd;
           add(edge_id, global_src_node, local_src_node, dst_mapper,
-              out_global_dst_nodes);
+              out_global_dst_nodes, out_seed_times);
         }
       }
     }
@@ -307,7 +294,8 @@ class NeighborSampler {
                   const node_t global_src_node,
                   const scalar_t local_src_node,
                   pyg::sampler::Mapper<node_t, scalar_t>& dst_mapper,
-                  std::vector<node_t>& out_global_dst_nodes) {
+                  std::vector<node_t>& out_global_dst_nodes,
+                  c10::optional<std::reference_wrapper<std::vector<temporal_t>>> out_seed_times = c10::nullopt) {
     const auto global_dst_node_value = col_[edge_id];
     const auto global_dst_node =
         to_node_t(global_dst_node_value, global_src_node);
@@ -324,6 +312,17 @@ class NeighborSampler {
     const auto res = dst_mapper.insert(global_dst_node);
     if (res.second) {  // not yet sampled.
       out_global_dst_nodes.push_back(global_dst_node);
+      if (edge_time_data_ && out_seed_times.has_value()) {
+        // If edge_time_data is provided, we append the timestamp of the edge
+        // to the seed_times vector.
+        out_seed_times.value().get().push_back(edge_time_data_[edge_id]);
+      }
+      if (node_time_data_ && out_seed_times.has_value()) {
+        // If node_time_data is provided, we append the timestamp of the node
+        // to the seed_times vector.
+        out_seed_times.value().get().push_back(
+            node_time_data_[global_dst_node_value]);
+      }
     }
     if (save_edges) {
       num_sampled_edges_per_hop[num_sampled_edges_per_hop.size() - 1]++;
@@ -338,6 +337,8 @@ class NeighborSampler {
   const scalar_t* rowptr_;
   const scalar_t* col_;
   const std::string temporal_strategy_;
+  const temporal_t* edge_time_data_;
+  const temporal_t* node_time_data_;
   std::vector<scalar_t> sampled_rows_;
   std::vector<scalar_t> sampled_cols_;
   std::vector<scalar_t> sampled_edge_ids_;
@@ -417,7 +418,13 @@ sample(const at::Tensor& rowptr,
     auto mapper = Mapper<node_t, scalar_t>(/*num_nodes=*/rowptr.size(0) - 1);
     auto sampler =
         NeighborSamplerImpl(rowptr.data_ptr<scalar_t>(),
-                            col.data_ptr<scalar_t>(), temporal_strategy);
+                            col.data_ptr<scalar_t>(), temporal_strategy, 
+                            edge_time.has_value()
+                                ? edge_time.value().data_ptr<temporal_t>()
+                                : nullptr,
+                            node_time.has_value()
+                                ? node_time.value().data_ptr<temporal_t>()
+                                : nullptr);
     std::vector<temporal_t> seed_times;
 
     const auto seed_data = seed.data_ptr<scalar_t>();
@@ -509,12 +516,8 @@ sample(const at::Tensor& rowptr,
               /*time=*/edge_time_data,
               /*dst_mapper=*/mapper,
               /*generator=*/generator,
-              /*out_global_dst_nodes=*/sampled_nodes);
-            sampler.update_edge_seed_times(
-              /*edge_time_data=*/edge_time_data,
-              /*sampled_nodes=*/sampled_nodes,
-              /*seed_times=*/seed_times,
-              /*num_seed_nodes=*/num_sampled_nodes_per_hop[0]);
+              /*out_global_dst_nodes=*/sampled_nodes,
+              /*out_seed_times=*/seed_times);            
             if constexpr (distributed)
               cumsum_neighbors_per_node.push_back(sampled_nodes.size());
           }
@@ -529,11 +532,8 @@ sample(const at::Tensor& rowptr,
                 /*time=*/node_time_data,
                 /*dst_mapper=*/mapper,
                 /*generator=*/generator,
-                /*out_global_dst_nodes=*/sampled_nodes);
-            sampler.update_node_seed_times(
-                /*node_time_data=*/node_time_data,
-                /*sampled_nodes=*/sampled_nodes,
-                /*seed_times=*/seed_times);
+                /*out_global_dst_nodes=*/sampled_nodes,
+                /*out_seed_times=*/seed_times);
             if constexpr (distributed)
               cumsum_neighbors_per_node.push_back(sampled_nodes.size());
           }
@@ -683,7 +683,15 @@ sample(const std::vector<node_type>& node_types,
           {k, NeighborSamplerImpl(
                   rowptr_dict.at(to_rel_type(k)).data_ptr<scalar_t>(),
                   col_dict.at(to_rel_type(k)).data_ptr<scalar_t>(),
-                  temporal_strategy)});
+                  temporal_strategy,
+                  edge_time_dict.has_value()
+                      ? edge_time_dict.value().at(to_rel_type(k))
+                            .data_ptr<temporal_t>()
+                      : nullptr,
+                  node_time_dict.has_value()
+                      ? node_time_dict.value().at(std::get<0>(k))
+                            .data_ptr<temporal_t>()
+                      : nullptr)});
 
       if (parallel) {
         // Each thread is assigned edge types that have the same dst node
@@ -837,13 +845,8 @@ sample(const std::vector<node_type>& node_types,
                           /*time=*/edge_time_data,
                           /*dst_mapper=*/dst_mapper,
                           /*generator=*/generator,
-                          /*out_global_dst_nodes=*/dst_sampled_nodes);
-                      sampler.update_edge_seed_times(
-                          /*edge_time_data=*/edge_time_data,
-                          /*sampled_nodes=*/dst_sampled_nodes,
-                          /*seed_times=*/seed_times,
-                          /*num_seed_nodes=*/num_sampled_nodes_per_hop_map
-                              .at(src)[0]);
+                          /*out_global_dst_nodes=*/dst_sampled_nodes,
+                          /*out_seed_times=*/seed_times);
                     }
                   } else {
                     // Node-level temporal sampling:
@@ -858,11 +861,8 @@ sample(const std::vector<node_type>& node_types,
                           /*time=*/dst_time_data,
                           /*dst_mapper=*/dst_mapper,
                           /*generator=*/generator,
-                          /*out_global_dst_nodes=*/dst_sampled_nodes);
-                      sampler.update_node_seed_times(
-                          /*node_time_data=*/dst_time_data,
-                          /*sampled_nodes=*/dst_sampled_nodes,
-                          /*seed_times=*/seed_times);
+                          /*out_global_dst_nodes=*/dst_sampled_nodes,
+                          /*out_seed_times=*/seed_times);
                     }
                   }
                 }

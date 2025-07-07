@@ -209,7 +209,7 @@ TEST(EdgeLevelTemporalNeighborTest, BasicAssertions) {
   auto col = std::get<1>(graph);
 
   // Time is equal to edge ID:
-  auto edge_time = at::arange(1, col.numel()+1, options);
+  auto edge_time = at::arange(col.numel(), options);
 
   auto out = pyg::sampler::neighbor_sample(
       /*rowptr=*/rowptr,
@@ -218,7 +218,7 @@ TEST(EdgeLevelTemporalNeighborTest, BasicAssertions) {
       /*num_neighbors=*/{2, 2},
       /*node_time=*/c10::nullopt,
       /*edge_time=*/edge_time,
-      /*seed_time=*/at::arange(5, 7, options),
+      /*seed_time=*/at::arange(6, 8, options),
       /*edge_weight=*/c10::nullopt,
       /*csc=*/false,
       /*replace=*/false,

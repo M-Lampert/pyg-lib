@@ -161,13 +161,16 @@ class NeighborSampler {
 
   // Appends the timestamps of newly sampled edges to the provided seed_times vector.
   void update_edge_seed_times(const temporal_t* edge_time_data, const std::vector<node_t>& sampled_nodes, std::vector<temporal_t>& seed_times, size_t num_seed_nodes) const {
-    // Print num_seed_nodes, seed_times and sampled_nodes for debugging
+    // Print num_seed_nodes, seed_times, sampled_edge_ids and sampled_nodes for debugging
     std::cout << "num_seed_nodes: " << num_seed_nodes << std::endl;
     for (size_t i = 0; i < seed_times.size(); ++i) {
       std::cout << "seed_times[" << i << "]: " << seed_times[i] << std::endl;
     }
     for (size_t i = 0; i < sampled_nodes.size(); ++i) {
       std::cout << "sampled_nodes[" << i << "]: " << sampled_nodes[i] << std::endl;
+    }
+    for (size_t i = 0; i < sampled_edge_ids_.size(); ++i) {
+      std::cout << "sampled_edge_ids_[" << i << "]: " << sampled_edge_ids_[i] << std::endl;
     }
     for (size_t i = seed_times.size(); i < sampled_nodes.size(); ++i) {
       auto edge_idx = i - num_seed_nodes;

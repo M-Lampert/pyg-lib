@@ -218,7 +218,7 @@ TEST(EdgeLevelTemporalNeighborTest, BasicAssertions) {
       /*num_neighbors=*/{2, 2},
       /*node_time=*/c10::nullopt,
       /*edge_time=*/edge_time,
-      /*seed_time=*/at::arange(5, 7, options),
+      /*seed_time=*/at::arange(6, 8, options),
       /*edge_weight=*/c10::nullopt,
       /*csc=*/false,
       /*replace=*/false,
@@ -275,6 +275,39 @@ TEST(EdgeLevelTemporalMultiHopNeighborTest, BasicAssertions) {
       /*node_time=*/c10::nullopt,
       /*edge_time=*/edge_time,
       /*seed_time=*/at::tensor({4}, options),
+      /*edge_weight=*/c10::nullopt,
+      /*csc=*/false,
+      /*replace=*/false,
+      /*directed=*/true,
+      /*disjoint=*/false);
+
+  auto expected_row = at::tensor({0}, options);
+  EXPECT_TRUE(at::equal(std::get<0>(out), expected_row));
+  auto expected_col = at::tensor({1}, options);
+  EXPECT_TRUE(at::equal(std::get<1>(out), expected_col));
+  auto expected_nodes = at::tensor({2, 1}, options);
+  EXPECT_TRUE(at::equal(std::get<2>(out), expected_nodes));
+  auto expected_edges = at::tensor({1}, options);
+  EXPECT_TRUE(at::equal(std::get<3>(out).value(), expected_edges));
+}
+
+TEST(EdgeLevelNonDisjointTest, BasicAssertions) {
+  auto options = at::TensorOptions().dtype(at::kLong);
+
+  auto rowptr = at::tensor({0, 0, 1, 2}, options);
+  auto col = at::tensor({0, 1}, options);
+
+  // Time is equal to edge ID:
+  auto edge_time = at::tensor({2, 1}, options);
+
+  auto out = pyg::sampler::neighbor_sample(
+      /*rowptr=*/rowptr,
+      /*col=*/col,
+      /*seed=*/at::tensor({2, 1}, options),
+      /*num_neighbors=*/{1, 1},
+      /*node_time=*/c10::nullopt,
+      /*edge_time=*/edge_time,
+      /*seed_time=*/at::tensor({2, 3}, options),
       /*edge_weight=*/c10::nullopt,
       /*csc=*/false,
       /*replace=*/false,

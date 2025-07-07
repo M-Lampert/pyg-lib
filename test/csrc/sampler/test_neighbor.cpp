@@ -209,7 +209,7 @@ TEST(EdgeLevelTemporalNeighborTest, BasicAssertions) {
   auto col = std::get<1>(graph);
 
   // Time is equal to edge ID:
-  auto edge_time = at::arange(col.numel(), options);
+  auto edge_time = at::arange(col.numel(), options) + 1;
 
   auto out = pyg::sampler::neighbor_sample(
       /*rowptr=*/rowptr,
@@ -307,7 +307,7 @@ TEST(EdgeLevelNonDisjointTest, BasicAssertions) {
       /*num_neighbors=*/{1, 1},
       /*node_time=*/c10::nullopt,
       /*edge_time=*/edge_time,
-      /*seed_time=*/at::tensor({1, 2}, options),
+      /*seed_time=*/at::tensor({2, 3}, options),
       /*edge_weight=*/c10::nullopt,
       /*csc=*/false,
       /*replace=*/false,
@@ -315,20 +315,12 @@ TEST(EdgeLevelNonDisjointTest, BasicAssertions) {
       /*disjoint=*/false);
 
   auto expected_row = at::tensor({0}, options);
-  std::cout << "expected_row: " << expected_row << std::endl;
-  std::cout << "actual_row: " << std::get<0>(out) << std::endl;
   EXPECT_TRUE(at::equal(std::get<0>(out), expected_row));
   auto expected_col = at::tensor({1}, options);
-  std::cout << "expected_col: " << expected_col << std::endl;
-  std::cout << "actual_col: " << std::get<1>(out) << std::endl;
   EXPECT_TRUE(at::equal(std::get<1>(out), expected_col));
   auto expected_nodes = at::tensor({2, 1}, options);
-  std::cout << "expected_nodes: " << expected_nodes << std::endl;
-  std::cout << "actual_nodes: " << std::get<2>(out) << std::endl;
   EXPECT_TRUE(at::equal(std::get<2>(out), expected_nodes));
   auto expected_edges = at::tensor({1}, options);
-  std::cout << "expected_edges: " << expected_edges << std::endl;
-  std::cout << "actual_edges: " << std::get<3>(out).value() << std::endl;
   EXPECT_TRUE(at::equal(std::get<3>(out).value(), expected_edges));
 }
 

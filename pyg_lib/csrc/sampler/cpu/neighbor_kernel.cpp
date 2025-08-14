@@ -448,11 +448,7 @@ sample(const at::Tensor& rowptr,
         seed_times.push_back(time_data[seed_data[i]]);
       }
     }
-    for (size_t i = 0; i < sampled_nodes.size(); ++i) {
-      std::cout << "Sampled node: " << sampled_nodes[i]
-                << ", Seed time: " << (i < seed_times.size() ? seed_times[i] : -1)
-                << std::endl;
-    }
+
     num_sampled_nodes_per_hop.push_back(seed.numel());
 
     size_t begin = 0, end = seed.size(0);

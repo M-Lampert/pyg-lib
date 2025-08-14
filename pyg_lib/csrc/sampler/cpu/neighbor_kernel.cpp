@@ -440,7 +440,7 @@ sample(const at::Tensor& rowptr,
     if (seed_time.has_value()) {
       const auto seed_time_data = seed_time.value().data_ptr<temporal_t>();
       for (size_t i = 0; i < seed.numel(); ++i) {
-        seed_times.push_back(seed_time_data[mapper.map(seed_data[i])]);
+        seed_times.push_back(seed_time_data[mapper.map(sampled_nodes[i])]);
       }
     } else if (node_time.has_value()) {
       const auto time_data = node_time.value().data_ptr<temporal_t>();

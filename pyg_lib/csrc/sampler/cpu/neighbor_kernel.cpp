@@ -444,19 +444,8 @@ sample(const at::Tensor& rowptr,
       }
     } else if (node_time.has_value()) {
       const auto time_data = node_time.value().data_ptr<temporal_t>();
-      if constexpr (!disjoint) {
-        temporal_t minimum_time = time_data[seed_data[0]];
-        for (size_t i = 1; i < seed.numel(); ++i) {
-          if (time_data[seed_data[i]] < minimum_time)
-            minimum_time = time_data[seed_data[i]];
-        }
-        for (size_t i = 0; i < seed.numel(); ++i) {
-          seed_times.push_back(minimum_time);
-        }
-      } else {
-        for (size_t i = 0; i < seed.numel(); ++i) {
-          seed_times.push_back(time_data[seed_data[i]]);
-        }
+      for (size_t i = 0; i < seed.numel(); ++i) {
+        seed_times.push_back(time_data[seed_data[i]]);
       }
     }
 
@@ -723,37 +712,15 @@ sample(const std::vector<node_type>& node_types,
         const at::Tensor& seed_time = seed_time_dict.value().at(kv.key());
         const auto seed_time_data = seed_time.data_ptr<scalar_t>();
         seed_times.reserve(seed_times.size() + seed.numel());
-        if constexpr(!disjoint) {
-          scalar_t minimum_seed_time = seed_time_data[0];
-          for (size_t i = 1; i < seed.numel(); ++i) {
-            if (seed_time_data[i] < minimum_seed_time)
-              minimum_seed_time = seed_time_data[i];
-          }
-          for (size_t i = 0; i < seed.numel(); ++i) {
-            seed_times.push_back(minimum_seed_time);
-          }
-        } else {
-          for (size_t i = 0; i < seed.numel(); ++i) {
-            seed_times.push_back(seed_time_data[i]);
-          }
+        for (size_t i = 0; i < seed.numel(); ++i) {
+          seed_times.push_back(seed_time_data[i]);
         }
       } else if (node_time_dict.has_value()) {
         const at::Tensor& time = node_time_dict.value().at(kv.key());
         const auto time_data = time.data_ptr<scalar_t>();
         seed_times.reserve(seed_times.size() + seed.numel());
-        if constexpr(!disjoint) {
-          scalar_t minimum_time = time_data[seed_data[0]];
-          for (size_t i = 1; i < seed.numel(); ++i) {
-            if (time_data[seed_data[i]] < minimum_time)
-              minimum_time = time_data[seed_data[i]];
-          }
-          for (size_t i = 0; i < seed.numel(); ++i) {
-            seed_times.push_back(minimum_time);
-          }
-        } else {
-          for (size_t i = 0; i < seed.numel(); ++i) {
-            seed_times.push_back(time_data[seed_data[i]]);
-          }
+        for (size_t i = 0; i < seed.numel(); ++i) {
+          seed_times.push_back(time_data[seed_data[i]]);
         }
       }
 

@@ -463,13 +463,19 @@ sample(const at::Tensor& rowptr,
       const auto seed_time_data = seed_time.value().data_ptr<temporal_t>();
       for (size_t i = 0; i < seed.numel(); ++i) {
         seed_times.push_back(seed_time_data[i]);
-        node_time_mapper->insert({seed_data[i], seed_time_data[i]});
+        node_time_mapper->insert({sampled_nodes[i], seed_time_data[i]});
       }
     } else if (node_time.has_value()) {
       const auto time_data = node_time.value().data_ptr<temporal_t>();
       for (size_t i = 0; i < seed.numel(); ++i) {
-        seed_times.push_back(time_data[seed_data[i]]);
-        node_time_mapper->insert({seed_data[i], time_data[seed_data[i]]});
+        scalar_t node_idx;
+        if constexpr (!disjoint) {
+          node_idx = seed_data[i];
+        } else {
+          node_idx = std::get<1>(sampled_nodes[i]);  // second element of the pair
+        }
+        seed_times.push_back(time_data[node_idx]);
+        node_time_mapper->insert({sampled_nodes[i], time_data[node_idx]});
       }
     }
 
@@ -828,6 +834,7 @@ sample(const std::vector<node_type>& node_types,
                           /*seed_time=*/seed_times[i],
                           /*time=*/edge_time_data,
                           /*dst_mapper=*/dst_mapper,
+                          /*node_time_mapper=*/node_time_mapper,
                           /*generator=*/generator,
                           /*out_global_dst_nodes=*/dst_sampled_nodes,
                           /*out_seed_times=*/seed_times);
@@ -844,6 +851,7 @@ sample(const std::vector<node_type>& node_types,
                           /*seed_time=*/seed_times[i],
                           /*time=*/dst_time_data,
                           /*dst_mapper=*/dst_mapper,
+                          /*node_time_mapper=*/node_time_mapper,
                           /*generator=*/generator,
                           /*out_global_dst_nodes=*/dst_sampled_nodes,
                           /*out_seed_times=*/seed_times);

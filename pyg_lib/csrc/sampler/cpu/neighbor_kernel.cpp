@@ -44,7 +44,7 @@ class NeighborSampler {
                      const at::Tensor& edge_weight,
                      const int64_t count,
                      pyg::sampler::Mapper<node_t, scalar_t>& dst_mapper,
-                     std::optional<pyg::sampler::Mapper<std::pair<node_t, temporal_t>, scalar_t>>& node_time_mapper,
+                     std::optional<phmap::flat_hash_set<std::pair<node_t, temporal_t>>>& node_time_mapper,
                      pyg::random::RandintEngine<scalar_t>& generator,
                      std::vector<node_t>& out_global_dst_nodes) {
     const auto row_start = rowptr_[to_scalar_t(global_src_node)];
@@ -63,7 +63,7 @@ class NeighborSampler {
                       const scalar_t local_src_node,
                       const int64_t count,
                       pyg::sampler::Mapper<node_t, scalar_t>& dst_mapper,
-                      std::optional<pyg::sampler::Mapper<std::pair<node_t, temporal_t>, scalar_t>>& node_time_mapper,
+                      std::optional<phmap::flat_hash_set<std::pair<node_t, temporal_t>>>& node_time_mapper,
                       pyg::random::RandintEngine<scalar_t>& generator,
                       std::vector<node_t>& out_global_dst_nodes) {
     const auto row_start = rowptr_[to_scalar_t(global_src_node)];
@@ -82,7 +82,7 @@ class NeighborSampler {
                             const temporal_t seed_time,
                             const temporal_t* time,
                             pyg::sampler::Mapper<node_t, scalar_t>& dst_mapper,
-                            std::optional<pyg::sampler::Mapper<std::pair<node_t, temporal_t>, scalar_t>>& node_time_mapper,
+                            std::optional<phmap::flat_hash_set<std::pair<node_t, temporal_t>>>& node_time_mapper,
                             pyg::random::RandintEngine<scalar_t>& generator,
                             std::vector<node_t>& out_global_dst_nodes,
                             std::vector<temporal_t>& out_seed_times) {
@@ -120,7 +120,7 @@ class NeighborSampler {
                             const temporal_t seed_time,
                             const temporal_t* time,
                             pyg::sampler::Mapper<node_t, scalar_t>& dst_mapper,
-                            std::optional<pyg::sampler::Mapper<std::pair<node_t, temporal_t>, scalar_t>>& node_time_mapper,
+                            std::optional<phmap::flat_hash_set<std::pair<node_t, temporal_t>>>& node_time_mapper,
                             pyg::random::RandintEngine<scalar_t>& generator,
                             std::vector<node_t>& out_global_dst_nodes,
                             std::vector<temporal_t>& out_seed_times) {
@@ -189,7 +189,7 @@ class NeighborSampler {
                const scalar_t row_end,
                const int64_t count,
                pyg::sampler::Mapper<node_t, scalar_t>& dst_mapper,
-               std::optional<pyg::sampler::Mapper<std::pair<node_t, temporal_t>, scalar_t>>& node_time_mapper,
+               std::optional<phmap::flat_hash_set<std::pair<node_t, temporal_t>>>& node_time_mapper,
                pyg::random::RandintEngine<scalar_t>& generator,
                std::vector<node_t>& out_global_dst_nodes,
                c10::optional<std::reference_wrapper<std::vector<temporal_t>>> out_seed_times = c10::nullopt) {
@@ -260,7 +260,7 @@ class NeighborSampler {
                       const int64_t count,
                       const at::Tensor& weight,
                       pyg::sampler::Mapper<node_t, scalar_t>& dst_mapper,
-                      std::optional<pyg::sampler::Mapper<std::pair<node_t, temporal_t>, scalar_t>>& node_time_mapper,
+                      std::optional<phmap::flat_hash_set<std::pair<node_t, temporal_t>>>& node_time_mapper,
                       pyg::random::RandintEngine<scalar_t>& generator,
                       std::vector<node_t>& out_global_dst_nodes) {
     const auto population = row_end - row_start;
@@ -300,7 +300,7 @@ class NeighborSampler {
                   const node_t global_src_node,
                   const scalar_t local_src_node,
                   pyg::sampler::Mapper<node_t, scalar_t>& dst_mapper,
-                  std::optional<pyg::sampler::Mapper<std::pair<node_t, temporal_t>, scalar_t>>& node_time_mapper,
+                  std::optional<phmap::flat_hash_set<std::pair<node_t, temporal_t>>>& node_time_mapper,
                   std::vector<node_t>& out_global_dst_nodes,
                   c10::optional<std::reference_wrapper<std::vector<temporal_t>>> out_seed_times = c10::nullopt) {
     const auto global_dst_node_value = col_[edge_id];
@@ -332,11 +332,11 @@ class NeighborSampler {
       }
     } else if (node_time_mapper.has_value() && out_seed_times.has_value()) {
       // if node_time_mapper is provided, we check if the node-time-pair already exists
-      if (edge_time_data_ && node_time_mapper->exists({global_dst_node, edge_time_data_[edge_id]})) {
+      if (edge_time_data_ && node_time_mapper->find({global_dst_node, edge_time_data_[edge_id]}) != node_time_mapper->end()) {
         out_global_dst_nodes.push_back(global_dst_node);
         out_seed_times.value().get().push_back(edge_time_data_[edge_id]);
       }
-      if (node_time_data_ && node_time_mapper->exists({global_dst_node, node_time_data_[global_dst_node_value]})) {
+      if (node_time_data_ && node_time_mapper->find({global_dst_node, node_time_data_[global_dst_node_value]}) != node_time_mapper->end()) {
         out_global_dst_nodes.push_back(global_dst_node);
         out_seed_times.value().get().push_back(node_time_data_[global_dst_node_value]);
       }
@@ -434,9 +434,9 @@ sample(const at::Tensor& rowptr,
   std::vector<node_t> sampled_nodes;
   auto mapper = Mapper<node_t, scalar_t>(/*num_nodes=*/rowptr.size(0) - 1);
   // For temporal sampling, keep additional mapper to track what node-timestamp pairs have been sampled.
-  std::optional<Mapper<std::pair<node_t, temporal_t>, scalar_t>> node_time_mapper;
+  std::optional<phmap::flat_hash_set<std::pair<node_t, temporal_t>>> node_time_mapper;
   if (node_time.has_value() || edge_time.has_value()) {
-    node_time_mapper.emplace(/*num_nodes=*/0); // Make sure use_vec is false
+    node_time_mapper.emplace();
   }
   auto sampler =
     NeighborSamplerImpl(rowptr.data_ptr<scalar_t>(),
@@ -789,7 +789,7 @@ sample(const std::vector<node_type>& node_types,
                 
                 // ToDo: Currently only added as dummy so that code compiles.
                 // Need to implement proper temporal sampling logic for hetero.
-                std::optional<Mapper<std::pair<node_t, temporal_t>, scalar_t>> node_time_mapper;
+                std::optional<phmap::flat_hash_set<std::pair<node_t, temporal_t>>> node_time_mapper;
 
                 sampler.num_sampled_edges_per_hop.push_back(0);
 

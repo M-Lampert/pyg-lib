@@ -44,6 +44,7 @@ class NeighborSampler {
                      const at::Tensor& edge_weight,
                      const int64_t count,
                      pyg::sampler::Mapper<node_t, scalar_t>& dst_mapper,
+                     std::optional<pyg::sampler::Mapper<std::pair<node_t, temporal_t>, scalar_t>>& node_time_mapper,
                      pyg::random::RandintEngine<scalar_t>& generator,
                      std::vector<node_t>& out_global_dst_nodes) {
     const auto row_start = rowptr_[to_scalar_t(global_src_node)];
@@ -55,13 +56,14 @@ class NeighborSampler {
     const auto weight = edge_weight.narrow(0, row_start, row_end - row_start);
 
     _biased_sample(global_src_node, local_src_node, row_start, row_end, count,
-                   weight, dst_mapper, generator, out_global_dst_nodes);
+                   weight, dst_mapper, node_time_mapper, generator, out_global_dst_nodes);
   }
 
   void uniform_sample(const node_t global_src_node,
                       const scalar_t local_src_node,
                       const int64_t count,
                       pyg::sampler::Mapper<node_t, scalar_t>& dst_mapper,
+                      std::optional<pyg::sampler::Mapper<std::pair<node_t, temporal_t>, scalar_t>>& node_time_mapper,
                       pyg::random::RandintEngine<scalar_t>& generator,
                       std::vector<node_t>& out_global_dst_nodes) {
     const auto row_start = rowptr_[to_scalar_t(global_src_node)];
@@ -71,7 +73,7 @@ class NeighborSampler {
       return;
 
     _sample(global_src_node, local_src_node, row_start, row_end, count,
-            dst_mapper, generator, out_global_dst_nodes);
+            dst_mapper, node_time_mapper, generator, out_global_dst_nodes);
   }
 
   void node_temporal_sample(const node_t global_src_node,
@@ -258,6 +260,7 @@ class NeighborSampler {
                       const int64_t count,
                       const at::Tensor& weight,
                       pyg::sampler::Mapper<node_t, scalar_t>& dst_mapper,
+                      std::optional<pyg::sampler::Mapper<std::pair<node_t, temporal_t>, scalar_t>>& node_time_mapper,
                       pyg::random::RandintEngine<scalar_t>& generator,
                       std::vector<node_t>& out_global_dst_nodes) {
     const auto population = row_end - row_start;
@@ -266,7 +269,7 @@ class NeighborSampler {
     if (count < 0 || (!replace && count >= population)) {
       for (scalar_t edge_id = row_start; edge_id < row_end; ++edge_id) {
         add(edge_id, global_src_node, local_src_node, dst_mapper,
-            out_global_dst_nodes);
+            node_time_mapper, out_global_dst_nodes);
       }
     }
 
@@ -288,7 +291,7 @@ class NeighborSampler {
       const auto index_data = index.data_ptr<int64_t>();
       for (size_t i = 0; i < index.numel(); ++i) {
         add(row_start + index_data[i], global_src_node, local_src_node,
-            dst_mapper, out_global_dst_nodes);
+            dst_mapper, node_time_mapper, out_global_dst_nodes);
       }
     }
   }
@@ -327,9 +330,9 @@ class NeighborSampler {
         out_seed_times.value().get().push_back(
             node_time_data_[global_dst_node_value]);
       }
-    } else if (node_time_mapper.has_value()) {
+    } else if (node_time_mapper.has_value() && out_seed_times.has_value()) {
       // if node_time_mapper is provided, we check if the node-time-pair already exists
-      if (edge_time_data && node_time_mapper->exists({global_dst_node, edge_time_data_[edge_id]})) {
+      if (edge_time_data_ && node_time_mapper->exists({global_dst_node, edge_time_data_[edge_id]})) {
         out_global_dst_nodes.push_back(global_dst_node);
         out_seed_times.value().get().push_back(edge_time_data_[edge_id]);
       }
@@ -484,6 +487,7 @@ sample(const at::Tensor& rowptr,
               /*edge_weight=*/edge_weight.value(),
               /*count=*/count,
               /*dst_mapper=*/mapper,
+              /*node_time_mapper=*/node_time_mapper,
               /*generator=*/generator,
               /*out_global_dst_nodes=*/sampled_nodes);
           if constexpr (distributed)
@@ -496,6 +500,7 @@ sample(const at::Tensor& rowptr,
               /*local_src_node=*/i,
               /*count=*/count,
               /*dst_mapper=*/mapper,
+              /*node_time_mapper=*/node_time_mapper,
               /*generator=*/generator,
               /*out_global_dst_nodes=*/sampled_nodes);
           if constexpr (distributed)
@@ -789,6 +794,7 @@ sample(const std::vector<node_type>& node_types,
                         /*edge_weight=*/edge_weight,
                         /*count=*/count,
                         /*dst_mapper=*/dst_mapper,
+                        /*node_time_mapper=*/node_time_mapper,
                         /*generator=*/generator,
                         /*out_global_dst_nodes=*/dst_sampled_nodes);
                   }
@@ -802,6 +808,7 @@ sample(const std::vector<node_type>& node_types,
                         /*local_src_node=*/i,
                         /*count=*/count,
                         /*dst_mapper=*/dst_mapper,
+                        /*node_time_mapper=*/node_time_mapper,
                         /*generator=*/generator,
                         /*out_global_dst_nodes=*/dst_sampled_nodes);
                   }

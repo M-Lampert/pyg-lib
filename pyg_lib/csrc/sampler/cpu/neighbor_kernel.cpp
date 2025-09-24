@@ -786,6 +786,10 @@ sample(const std::vector<node_type>& node_types,
                 auto& sampler = sampler_dict.at(k);
                 size_t begin, end;
                 std::tie(begin, end) = slice_dict.at(src);
+                
+                // ToDo: Currently only added as dummy so that code compiles.
+                // Need to implement proper temporal sampling logic for hetero.
+                std::optional<Mapper<std::pair<node_t, temporal_t>, scalar_t>> node_time_mapper;
 
                 sampler.num_sampled_edges_per_hop.push_back(0);
 

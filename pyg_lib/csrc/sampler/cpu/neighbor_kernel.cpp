@@ -436,7 +436,7 @@ sample(const at::Tensor& rowptr,
   // For temporal sampling, keep additional mapper to track what node-timestamp pairs have been sampled.
   std::optional<Mapper<std::pair<node_t, temporal_t>, scalar_t>> node_time_mapper;
   if (node_time.has_value() || edge_time.has_value()) {
-    node_time_mapper.emplace(/*num_nodes=*/rowptr.size(0) - 1);
+    node_time_mapper.emplace(/*num_nodes=*/0);
   }
   auto sampler =
     NeighborSamplerImpl(rowptr.data_ptr<scalar_t>(),

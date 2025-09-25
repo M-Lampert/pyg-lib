@@ -332,11 +332,11 @@ class NeighborSampler {
       }
     } else if (node_time_mapper.has_value() && out_seed_times.has_value()) {
       // if node_time_mapper is provided, we check if the node-time-pair already exists
-      if (edge_time_data_ && node_time_mapper->find({global_dst_node, edge_time_data_[edge_id]}) != node_time_mapper->end()) {
+      if (edge_time_data_ && node_time_mapper->find({global_dst_node, edge_time_data_[edge_id]}) == node_time_mapper->end()) {
         out_global_dst_nodes.push_back(global_dst_node);
         out_seed_times.value().get().push_back(edge_time_data_[edge_id]);
       }
-      if (node_time_data_ && node_time_mapper->find({global_dst_node, node_time_data_[global_dst_node_value]}) != node_time_mapper->end()) {
+      if (node_time_data_ && node_time_mapper->find({global_dst_node, node_time_data_[global_dst_node_value]}) == node_time_mapper->end()) {
         out_global_dst_nodes.push_back(global_dst_node);
         out_seed_times.value().get().push_back(node_time_data_[global_dst_node_value]);
       }
